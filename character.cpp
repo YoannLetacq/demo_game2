@@ -6,8 +6,8 @@ character::character(int window_width, int window_height, float scale) {
     width = (float) texture.width / (float) max_frame;
     height = (float) texture.height;
     screen_pos = {
-            (float) window_width / 2.0f - scale * (0.5f * width),
-            (float) window_height / 2.0f - scale * (0.5f * height)
+            static_cast<float>(window_width) / 2.0f - scale * (0.5f * width),
+            static_cast<float>(window_height) / 2.0f - scale * (0.5f * height)
     };
 }
 
@@ -52,4 +52,14 @@ void character::tick(float dt) {
 void character::undo_movement()
 {
     world_pos = world_pos_last_frame;
+}
+
+Rectangle character::get_collision_rec()
+{
+    return Rectangle {
+        screen_pos.x,
+        screen_pos.y,
+        width * 6.f,
+        height * 6.f,
+    };
 }

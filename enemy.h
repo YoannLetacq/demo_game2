@@ -1,14 +1,14 @@
 #include "raylib.h"
 #include "base_character.h"
-
-class character : public base_character
+class enemy : public base_character
 {
 public:
-    character(int window_width, int window_height, float scale);
+    enemy(Vector2 pos, Texture2D idle_texture, Texture2D run_texture);
     Vector2 get_world_pos() { return world_pos; }
     void tick(float dt);
     void undo_movement();
     Rectangle get_collision_rec();
+
 private:
     Texture2D texture{LoadTexture("/home/yoann/CLionProjects/litle_word/characters/knight_idle_spritesheet.png")};
     Texture2D idle{LoadTexture("/home/yoann/CLionProjects/litle_word/characters/knight_idle_spritesheet.png")};
@@ -24,4 +24,5 @@ private:
     const float speed{5.f};
     const int max_frame{6};
     int frame{};
+
 };

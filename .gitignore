@@ -1,3 +1,4 @@
 *.tmx
 *.tsx
-map_set/*
+cmake-build-debug
+nature_tileset
