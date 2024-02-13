@@ -2,64 +2,82 @@
 #include "raymath.h"
 
 
-character::character(int window_width, int window_height, float scale) {
+character::character(int window_width, int window_height)
+: window_width(window_width), window_height(window_height)
+{
     width = (float) texture.width / (float) max_frame;
     height = (float) texture.height;
-    screen_pos = {
+
+}
+
+Vector2 character::get_screen_pos()
+{
+    return Vector2 {
             static_cast<float>(window_width) / 2.0f - scale * (0.5f * width),
             static_cast<float>(window_height) / 2.0f - scale * (0.5f * height)
     };
 }
 
 void character::tick(float dt) {
-    world_pos_last_frame = world_pos;
-    Vector2 direction{};
-    if (IsKeyDown(KEY_A)) direction.x -= 1.0;
-    if (IsKeyDown(KEY_D)) direction.x += 1.0;
-    if (IsKeyDown(KEY_W)) direction.y -= 1.0;
-    if (IsKeyDown(KEY_S)) direction.y += 1.0;
+    if (!get_alive()) return;
 
+    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) velocity.x -= 1.0;
+    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) velocity.x += 1.0;
+    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)) velocity.y -= 1.0;
+    if (IsKeyDown(KEY_S)|| IsKeyDown(KEY_DOWN)) velocity.y += 1.0;
+    base_character::tick(dt);
 
-    if (Vector2Length(direction) != 0.0) {
-        texture = run;
-        world_pos = Vector2Add(world_pos, Vector2Scale(Vector2Normalize(direction), speed));
-        direction.x < 0.0f ? right_left = -1.0f : right_left = 1.0f;
-    } else {
-        texture = idle;
+    Vector2 origin{};
+    Vector2 offset{};
+    if (right_left > 0.f)
+    {
+        origin = {0.f, static_cast<float>(weapon.height) * scale};
+        offset = {55.f, 75.f};
+        weapon_col_rec = {
+                get_screen_pos().x + offset.x,
+                get_screen_pos().y + offset.y - static_cast<float>(weapon.height) * scale,
+                static_cast<float>(weapon.width) * scale,
+                static_cast<float>(weapon.height) * scale
+        };
+        rotation = IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? 35.f : 0.f;
+    }
+    else
+    {
+        origin = {static_cast<float>(weapon.width) * scale, static_cast<float>(weapon.height) * scale};
+        offset = { 35.f, 75.f};
+        weapon_col_rec = {
+                get_screen_pos().x + offset.x - static_cast<float>(weapon.width) * scale,
+                get_screen_pos().y + offset.y - static_cast<float>(weapon.height) * scale,
+                static_cast<float>(weapon.width) * scale,
+                static_cast<float>(weapon.height) * scale
+        };
+        rotation = IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? -35.f : 0.f;
     }
 
-    //update animation
-    running_time += dt;
-    if (running_time >= update_time) {
-        running_time = 0.0;
-        frame++;
-        if (frame > max_frame) frame = 0;
-    }
-
-    //draw
+    //draw weapons
     Rectangle source{
-            (float) frame * width, 0.0f,
-            right_left * width, height,
+        0.f, 0.f, static_cast<float>(weapon.width) * right_left
+        , static_cast<float>(weapon.height)
     };
     Rectangle dest{
-            screen_pos.x, screen_pos.y,
-            6.f * width, 6.f * height
+        get_screen_pos().x + offset.x, get_screen_pos().y + offset.y,
+        static_cast<float>(weapon.width) * scale, static_cast<float>(weapon.height) * scale
     };
-    Vector2 origin_vec{};
-    DrawTexturePro(texture, source, dest, origin_vec, 1.0, WHITE);
+    DrawTexturePro(weapon, source, dest, origin, rotation, WHITE);
+    DrawRectangleLines(
+        static_cast<int>(weapon_col_rec.x),
+        static_cast<int>(weapon_col_rec.y),
+        static_cast<int>(weapon_col_rec.width),
+        static_cast<int>(weapon_col_rec.height),
+        RED
+    );
 }
 
-void character::undo_movement()
+void character::take_damage(float damage)
 {
-    world_pos = world_pos_last_frame;
-}
-
-Rectangle character::get_collision_rec()
-{
-    return Rectangle {
-        screen_pos.x,
-        screen_pos.y,
-        width * 6.f,
-        height * 6.f,
-    };
+    health -= damage;
+    if (health <= 0.f)
+    {
+        set_alive(false);
+    }
 }

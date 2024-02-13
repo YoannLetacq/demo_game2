@@ -2,3 +2,4 @@
 *.tsx
 cmake-build-debug
 nature_tileset
+CMakeLists.txt

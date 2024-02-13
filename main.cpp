@@ -3,6 +3,7 @@
 #include "character.h"
 #include "prop.h"
 #include "enemy.h"
+#include <string>
 struct Window {
     const int width, height;
     const char *title;
@@ -48,11 +49,12 @@ int main() {
     SetTargetFPS(60);
 
     Texture2D bg{map_loader()};
-    character player{window.width, window.height, scale};
+    character player{window.width, window.height};
     enemy goblin{Vector2{950.f, 950.f},
                  LoadTexture("/home/yoann/CLionProjects/litle_word/characters/goblin_idle_spritesheet.png"),
                  LoadTexture("/home/yoann/CLionProjects/litle_word/characters/goblin_run_spritesheet.png")
     };
+    goblin.set_target(&player);
 
     prop props[2] {
             prop{Vector2{850.0,850.0}, LoadTexture("/home/yoann/CLionProjects/litle_word/nature_tileset/Rock.png")},
@@ -72,13 +74,27 @@ int main() {
         {
             prop.render(player.get_world_pos());
         }
+
+        if (!player.get_alive())
+        {
+            DrawText("Game over!", 55.f, 45.f, 40, RED);
+            EndDrawing();
+            continue;
+        }
+        else
+        {
+            std::string player_health = "Health: ";
+            player_health.append(std::to_string(player.get_health()), 0, 5);
+            DrawText(player_health.c_str(), 55.f, 45.f, 40, RED);
+        }
         player.tick(dt);
+
         // check map bound
 
         if (player.get_world_pos().x < 0.f + map_padding_x ||
             player.get_world_pos().y < 0.f + map_padding_y||
-            player.get_world_pos().x + (float)window.width > (float)bg.width * scale + map_padding_x||
-            player.get_world_pos().y + (float)window.height > (float)bg.height * scale + map_padding_y)
+            player.get_world_pos().x + (float)window.width > (float)bg.width * scale - (map_padding_x) ||
+            player.get_world_pos().y + (float)window.height > (float)bg.height * scale - map_padding_y+300.f)
         {
             player.undo_movement();
         }
@@ -89,6 +105,15 @@ int main() {
             };
         }
         goblin.tick(dt);
+
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+            if (CheckCollisionRecs(goblin.get_collision_rec(), player.get_weapon_col()))
+            {
+                goblin.set_alive(false);
+
+            }
+        }
         EndDrawing();
     }
     UnloadTexture(bg);
