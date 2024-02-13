@@ -12,12 +12,31 @@ struct Window {
 
 };
 
+void resize_window(int window_width, int window_height)
+{
+    if (IsKeyPressed(KEY_F11) && IsKeyDown(KEY_LEFT_ALT))
+    {
+        int display = GetCurrentMonitor();
+
+        if (IsWindowFullscreen())
+        {
+            SetWindowSize(window_width, window_height);
+        }
+        else
+        {
+            SetWindowSize(GetMonitorWidth(display), GetMonitorHeight(display));
+        }
+        ToggleBorderlessWindowed();
+    }
+}
+
+
 /*
  * MAP
  */
 
 Texture2D map_loader() {
-    Texture2D bg = LoadTexture("/home/yoann/CLionProjects/litle_word/map_set/worldMap2.png");
+    Texture2D bg = LoadTexture("/home/yoann/CLionProjects/litle_word/map_set/worldMap_ssObjects.png");
     return bg;
 }
 
@@ -56,16 +75,34 @@ int main() {
     };
     goblin.set_target(&player);
 
+    enemy slime{
+        Vector2 {1300.f, 1300.f},
+        LoadTexture("/home/yoann/CLionProjects/litle_word/characters/slime_idle_spritesheet.png"),
+        LoadTexture("/home/yoann/CLionProjects/litle_word/characters/slime_run_spritesheet.png")
+    };
+
     prop props[2] {
             prop{Vector2{850.0,850.0}, LoadTexture("/home/yoann/CLionProjects/litle_word/nature_tileset/Rock.png")},
             prop{Vector2{600.0,600.0}, LoadTexture("/home/yoann/CLionProjects/litle_word/nature_tileset/Log.png")}
     };
+
+    enemy* enemies[]{
+        &goblin, &slime
+    };
+
+    for (auto enemy : enemies)
+    {
+        enemy->set_target(&player);
+    }
 
     //game engine loop
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(WHITE);
         const float dt{GetFrameTime()};
+
+
+        resize_window(window.width, window.height);
 
         map_pos = Vector2Scale(player.get_world_pos(), -1.f);
         DrawTextureEx(bg, map_pos, rotation, scale, WHITE);
@@ -104,15 +141,22 @@ int main() {
                 player.undo_movement();
             };
         }
-        goblin.tick(dt);
+
+        for (auto enemy : enemies)
+        {
+                enemy->tick(dt);
+        }
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
-            if (CheckCollisionRecs(goblin.get_collision_rec(), player.get_weapon_col()))
+            for (auto enemy : enemies)
             {
-                goblin.set_alive(false);
-
+                if (CheckCollisionRecs(enemy->get_collision_rec(), player.get_weapon_col()))
+                {
+                    enemy->set_alive(false);
+                }
             }
+
         }
         EndDrawing();
     }

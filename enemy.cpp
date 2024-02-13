@@ -16,15 +16,15 @@ enemy::enemy(Vector2 pos, Texture2D idle_texture, Texture2D run_texture) {
 void enemy::tick(float dt) {
     if (!get_alive()) return;
     velocity = {Vector2Subtract(target->get_screen_pos(), get_screen_pos())};
-    base_character::tick(dt);
 
-    if (CheckCollisionRecs(target->get_collision_rec(), get_collision_rec()))
-    {
+    if (Vector2Length(velocity) < radius) velocity = {};
+
+    base_character::tick(dt);
+    if (CheckCollisionRecs(target->get_collision_rec(), get_collision_rec())) {
         target->take_damage(damage_per_sec * dt);
     }
 }
 
-Vector2 enemy::get_screen_pos()
-{
+Vector2 enemy::get_screen_pos() {
     return Vector2Subtract(world_pos, target->get_world_pos());
 }

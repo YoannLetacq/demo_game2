@@ -64,13 +64,6 @@ void character::tick(float dt) {
         static_cast<float>(weapon.width) * scale, static_cast<float>(weapon.height) * scale
     };
     DrawTexturePro(weapon, source, dest, origin, rotation, WHITE);
-    DrawRectangleLines(
-        static_cast<int>(weapon_col_rec.x),
-        static_cast<int>(weapon_col_rec.y),
-        static_cast<int>(weapon_col_rec.width),
-        static_cast<int>(weapon_col_rec.height),
-        RED
-    );
 }
 
 void character::take_damage(float damage)
